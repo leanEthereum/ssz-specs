@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from ssz import BaseBitlist, BaseBitvector, Boolean, SSZList, Uint64
+from ssz import BaseBitlist, BaseBitvector, Boolean, List, Uint64
 from ssz_testing import SSZTestFiller
 
 
@@ -52,7 +52,7 @@ class BoundaryBitlist256(BaseBitlist):
     LIMIT: ClassVar[int] = 256
 
 
-class BoundaryUint64List32(SSZList[Uint64]):
+class BoundaryUint64List32(List[Uint64]):
     """Uint64 list with a 32-element cap. 3 elements span 24 bytes, shy of one chunk."""
 
     LIMIT: ClassVar[int] = 32

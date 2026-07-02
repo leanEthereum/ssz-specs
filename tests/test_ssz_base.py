@@ -3,11 +3,11 @@
 from ssz import Uint8, Uint16, Uint64
 from ssz.bitfields import BaseBitlist
 from ssz.boolean import Boolean
-from ssz.collections import SSZList
+from ssz.collections import List
 from ssz.container import Container
 
 
-class Uint16List4(SSZList[Uint16]):
+class Uint16List4(List[Uint16]):
     """A list with up to 4 Uint16 values."""
 
     LIMIT = 4
@@ -38,7 +38,7 @@ class TestSSZModelLength:
     """
     Tests for SSZModel.__len__() on both collection and container models.
 
-    Uses BaseBitlist (not SSZList) for the data-path because SSZList overrides
+    Uses BaseBitlist (not List) for the data-path because List overrides
     __len__ with its own implementation. BaseBitlist inherits SSZModel's version.
     """
 

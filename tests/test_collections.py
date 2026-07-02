@@ -1,4 +1,4 @@
-"""Tests for the SSZVector and SSZList types."""
+"""Tests for the SSZVector and List types."""
 
 from typing import Any, cast
 
@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 from ssz import Bytes32, Uint8, Uint16, Uint32
 from ssz.boolean import Boolean
-from ssz.collections import SSZList, SSZVector, _validate_offsets
+from ssz.collections import List, SSZVector, _validate_offsets
 from ssz.container import Container
 from ssz.exceptions import SSZSerializationError, SSZTypeError, SSZValueError
 
@@ -16,7 +16,7 @@ ValueOrValidationError = (SSZValueError, ValidationError)
 TypeOrValidationError = (SSZTypeError, ValidationError)
 
 
-class Uint16List4(SSZList[Uint16]):
+class Uint16List4(List[Uint16]):
     """A list with up to 4 Uint16 values."""
 
     LIMIT = 4
@@ -72,43 +72,43 @@ class VariableContainerVector2(SSZVector[VariableContainer]):
     LENGTH = 2
 
 
-class Uint16List32(SSZList[Uint16]):
+class Uint16List32(List[Uint16]):
     """A list with up to 32 Uint16 values."""
 
     LIMIT = 32
 
 
-class Uint8List10(SSZList[Uint8]):
+class Uint8List10(List[Uint8]):
     """A list with up to 10 Uint8 values."""
 
     LIMIT = 10
 
 
-class Uint32List128(SSZList[Uint32]):
+class Uint32List128(List[Uint32]):
     """A list with up to 128 Uint32 values."""
 
     LIMIT = 128
 
 
-class Bytes32List32(SSZList[Bytes32]):
+class Bytes32List32(List[Bytes32]):
     """A list with up to 32 Bytes32 values."""
 
     LIMIT = 32
 
 
-class Bytes32List128(SSZList[Bytes32]):
+class Bytes32List128(List[Bytes32]):
     """A list with up to 128 Bytes32 values."""
 
     LIMIT = 128
 
 
-class VariableContainerList2(SSZList[VariableContainer]):
+class VariableContainerList2(List[VariableContainer]):
     """A list with up to 2 VariableContainer values."""
 
     LIMIT = 2
 
 
-class FixedContainerList2(SSZList[FixedContainer]):
+class FixedContainerList2(List[FixedContainer]):
     """A list with up to 2 FixedContainer values."""
 
     LIMIT = 2
@@ -138,25 +138,25 @@ class Uint8Vector2(SSZVector[Uint8]):
     LENGTH = 2
 
 
-class Uint8List32(SSZList[Uint8]):
+class Uint8List32(List[Uint8]):
     """A list with up to 32 Uint8 values."""
 
     LIMIT = 32
 
 
-class Uint8List64(SSZList[Uint8]):
+class Uint8List64(List[Uint8]):
     """A list with up to 64 Uint8 values."""
 
     LIMIT = 64
 
 
-class Uint8List4(SSZList[Uint8]):
+class Uint8List4(List[Uint8]):
     """A list with up to 4 Uint8 values."""
 
     LIMIT = 4
 
 
-class BooleanList4(SSZList[Boolean]):
+class BooleanList4(List[Boolean]):
     """A list with up to 4 Boolean values."""
 
     LIMIT = 4
@@ -377,13 +377,13 @@ class TestSSZVectorAccessors:
         assert str(exception_info.value) == "Uint8Vector2 requires exactly 2 elements, got 1"
 
 
-class TestSSZListValidator:
-    """Tests for the SSZList field validator and its rejection paths."""
+class TestListValidator:
+    """Tests for the List field validator and its rejection paths."""
 
     def test_missing_element_type_and_limit_rejected(self) -> None:
         """A subclass without ELEMENT_TYPE or LIMIT cannot validate any input."""
 
-        class MissingBoth(SSZList):
+        class MissingBoth(List):
             pass
 
         with pytest.raises(TypeOrValidationError) as exception_info:
@@ -393,7 +393,7 @@ class TestSSZListValidator:
     def test_missing_limit_rejected(self) -> None:
         """A subclass with ELEMENT_TYPE but no LIMIT cannot validate."""
 
-        class MissingLimitList(SSZList[Uint8]):
+        class MissingLimitList(List[Uint8]):
             pass
 
         with pytest.raises(TypeOrValidationError) as exception_info:
@@ -401,10 +401,10 @@ class TestSSZListValidator:
         assert str(exception_info.value) == "MissingLimitList must define ELEMENT_TYPE and LIMIT"
 
     def test_raw_base_class_rejected(self) -> None:
-        """Instantiating the raw SSZList base surfaces the metadata-missing error."""
+        """Instantiating the raw List base surfaces the metadata-missing error."""
         with pytest.raises(SSZTypeError) as exception_info:
-            SSZList(data=[])
-        assert str(exception_info.value) == "SSZList must define ELEMENT_TYPE and LIMIT"
+            List(data=[])
+        assert str(exception_info.value) == "List must define ELEMENT_TYPE and LIMIT"
 
     @pytest.mark.parametrize(
         "bad_input, type_name",
@@ -476,8 +476,8 @@ class TestSSZListValidator:
         assert str(exception_info.value) == "BooleanList4 exceeds limit of 4, got 5"
 
 
-class TestSSZListClassMetadata:
-    """Tests for SSZList class-level metadata and inference."""
+class TestListClassMetadata:
+    """Tests for List class-level metadata and inference."""
 
     def test_class_getitem_creates_specialized_type(self) -> None:
         """Explicit subclasses keep distinct LIMIT and ELEMENT_TYPE bindings."""
@@ -490,7 +490,7 @@ class TestSSZListClassMetadata:
     def test_init_subclass_infers_element_type_from_generic(self) -> None:
         """Generic subclasses copy the bracketed type into ELEMENT_TYPE."""
 
-        class LocalList(SSZList[Uint16]):
+        class LocalList(List[Uint16]):
             LIMIT = 2
 
         assert LocalList.ELEMENT_TYPE is Uint16
@@ -518,8 +518,8 @@ class TestSSZListClassMetadata:
         )
 
 
-class TestSSZListAccessors:
-    """Tests for SSZList accessor and concatenation behavior."""
+class TestListAccessors:
+    """Tests for List accessor and concatenation behavior."""
 
     def test_integer_index_returns_typed_element(self) -> None:
         """Positive integer indexing returns the corresponding typed element."""
@@ -552,13 +552,13 @@ class TestSSZListAccessors:
         assert list(instance) == [Uint8(1), Uint8(2), Uint8(3)]
 
     def test_pydantic_dict_input_coerces_to_list(self) -> None:
-        """Pydantic coerces a list payload into an SSZList with typed elements."""
+        """Pydantic coerces a list payload into an List with typed elements."""
         instance = Uint8List4Model(value=Uint8List4(data=[Uint8(10), Uint8(20)]))
 
         assert instance.value == Uint8List4(data=[Uint8(10), Uint8(20)])
 
     def test_add_with_sszlist(self) -> None:
-        """Concatenating two SSZLists yields a fresh list of the same type."""
+        """Concatenating two Lists yields a fresh list of the same type."""
         concatenated = Uint8List10(data=[Uint8(1), Uint8(2)]) + Uint8List10(
             data=[Uint8(3), Uint8(4)]
         )
@@ -730,8 +730,8 @@ class TestSSZVectorSerialization:
         )
 
 
-class TestSSZListSerialization:
-    """Tests SSZ serialization and deserialization for SSZList."""
+class TestListSerialization:
+    """Tests SSZ serialization and deserialization for List."""
 
     @pytest.mark.parametrize(
         "list_type, elements, expected_hex",
@@ -762,7 +762,7 @@ class TestSSZListSerialization:
     )
     def test_fixed_size_element_list_roundtrip(
         self,
-        list_type: type[SSZList],
+        list_type: type[List],
         elements: tuple[Any, ...],
         expected_hex: str,
     ) -> None:

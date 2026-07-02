@@ -6,13 +6,13 @@ import pytest
 from hypothesis import given, strategies as st
 from pydantic import ValidationError
 
-from ssz.collections import SSZList
+from ssz.collections import List
 from ssz.container import Container
 from ssz.exceptions import SSZSerializationError, SSZTypeError
 from ssz.uint import Uint8, Uint16, Uint32, Uint64
 
 
-class Uint16List4(SSZList[Uint16]):
+class Uint16List4(List[Uint16]):
     """A list with up to 4 Uint16 values for variable-field testing."""
 
     LIMIT = 4

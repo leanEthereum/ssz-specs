@@ -21,7 +21,7 @@ from ssz import (
 )
 from ssz.bitfields import BaseBitlist, BaseBitvector
 from ssz.boolean import Boolean
-from ssz.collections import SSZList, SSZVector
+from ssz.collections import List, SSZVector
 from ssz.container import Container
 from ssz.merkleization import (
     _next_pow2,
@@ -315,25 +315,25 @@ class Bytes32Vector3(SSZVector[Bytes32]):
     LENGTH = 3
 
 
-class Uint16List32(SSZList[Uint16]):
+class Uint16List32(List[Uint16]):
     """List of Uint16 with a 32-element limit."""
 
     LIMIT = 32
 
 
-class Uint16List1024(SSZList[Uint16]):
+class Uint16List1024(List[Uint16]):
     """List of Uint16 with a 1024-element limit used as a container field."""
 
     LIMIT = 1024
 
 
-class Uint32List128(SSZList[Uint32]):
+class Uint32List128(List[Uint32]):
     """List of Uint32 with a 128-element limit."""
 
     LIMIT = 128
 
 
-class Bytes32List32(SSZList[Bytes32]):
+class Bytes32List32(List[Bytes32]):
     """List of composite Bytes32 elements with a 32-element limit."""
 
     LIMIT = 32

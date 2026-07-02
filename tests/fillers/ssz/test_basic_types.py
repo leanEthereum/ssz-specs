@@ -11,7 +11,7 @@ from ssz import (
     Bytes32,
     Bytes52,
     Bytes64,
-    SSZList,
+    List,
     SSZVector,
     Uint8,
     Uint16,
@@ -51,14 +51,14 @@ class SampleUint64Vector4(SSZVector[Uint64]):
     LENGTH: ClassVar[int] = 4
 
 
-class SampleUint32List16(SSZList[Uint32]):
+class SampleUint32List16(List[Uint32]):
     """Variable-length list of up to 16 four-byte elements."""
 
     LIMIT: ClassVar[int] = 16
     ELEMENT_TYPE = Uint32
 
 
-class SampleBytes32List8(SSZList[Bytes32]):
+class SampleBytes32List8(List[Bytes32]):
     """Variable-length list of up to 8 fixed-size 32-byte elements."""
 
     LIMIT: ClassVar[int] = 8

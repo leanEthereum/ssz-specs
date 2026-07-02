@@ -448,7 +448,7 @@ class SSZVector[T: SSZType](_SSZSequence[T]):
         )
 
 
-class SSZList[T: SSZType](_SSZSequence[T]):
+class List[T: SSZType](_SSZSequence[T]):
     """
     Variable-length SSZ sequence with a maximum capacity.
 
@@ -520,7 +520,7 @@ class SSZList[T: SSZType](_SSZSequence[T]):
         Overflowing concatenations raise SSZValueError at construction.
         """
         match other:
-            case SSZList():
+            case List():
                 new_data = (*self.data, *other.data)
             case list() | tuple():
                 new_data = (*self.data, *other)
