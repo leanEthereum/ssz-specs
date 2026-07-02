@@ -1,0 +1,38 @@
+# Contributing to SSZ Specs
+
+## Quick Start
+
+1. Fork and clone the repository
+2. Install dependencies: `uv sync`
+3. Make your changes
+4. Install `just`: `uv tool install just-bin`
+5. Run checks: `just check`
+6. Run tests: `just test`
+7. Submit a pull request
+
+## Pull Request Guidelines
+
+1. **Create a feature branch**: `git checkout -b feat/your-feature-name`
+2. **Write clear commit messages** that explain what and why
+3. **Add tests** for any new functionality
+4. **Update documentation** as needed
+5. **Ensure all checks pass** before submitting
+
+## Code Style
+
+- **Type hints**: Required for all functions and methods
+- **Docstrings**: Use Google style for public APIs
+- **Line length**: 100 characters (enforced by ruff)
+- **Formatting**: Run `just fix` to auto-format
+
+## Testing
+
+- Write tests that mirror the source structure
+- Use `pytest.mark.parametrize` for multiple test cases
+- Mark slow tests with `@pytest.mark.slow`
+
+## Questions?
+
+- Check existing [issues](https://github.com/ethereum/ssz-specs/issues)
+- Open a new issue for discussion
+- See [README.md](README.md) for more details on the project structure and commands
