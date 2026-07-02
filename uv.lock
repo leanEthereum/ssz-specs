@@ -2,6 +2,12 @@ version = 1
 revision = 2
 requires-python = ">=3.12"
 
+[manifest]
+members = [
+    "eth-ssz-specs",
+    "ssz-testing",
+]
+
 [[package]]
 name = "annotated-types"
 version = "0.7.0"
@@ -361,6 +367,7 @@ dev = [
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "ssz-testing" },
     { name = "tomli-w" },
     { name = "twine" },
     { name = "ty" },
@@ -382,6 +389,7 @@ test = [
     { name = "pytest-cov" },
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
+    { name = "ssz-testing" },
 ]
 
 [package.metadata]
@@ -406,6 +414,7 @@ dev = [
     { name = "pytest-timeout", specifier = ">=2.2.0,<3" },
     { name = "pytest-xdist", specifier = ">=3.6.1,<4" },
     { name = "ruff", specifier = ">=0.13.2,<1" },
+    { name = "ssz-testing", editable = "packages/testing" },
     { name = "tomli-w", specifier = ">=1.0.0" },
     { name = "twine", specifier = ">=5.1.0,<6" },
     { name = "ty", specifier = "==0.0.5" },
@@ -427,6 +436,7 @@ test = [
     { name = "pytest-cov", specifier = ">=6.0.0,<7" },
     { name = "pytest-timeout", specifier = ">=2.2.0,<3" },
     { name = "pytest-xdist", specifier = ">=3.6.1,<4" },
+    { name = "ssz-testing", editable = "packages/testing" },
 ]
 
 [[package]]
@@ -1400,6 +1410,25 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e8/c4/ba2f8066cceb6f23394729afe52f3bf7adec04bf9ed2c820b39e19299111/sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88", size = 30594, upload-time = "2021-05-16T22:03:42.897Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/32/46/9cb0e58b2deb7f82b84065f37f3bffeb12413f947f9388e4cac22c4621ce/sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0", size = 29575, upload-time = "2021-05-16T22:03:41.177Z" },
+]
+
+[[package]]
+name = "ssz-testing"
+version = "0.0.1"
+source = { editable = "packages/testing" }
+dependencies = [
+    { name = "click" },
+    { name = "eth-ssz-specs" },
+    { name = "pydantic" },
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.0,<9" },
+    { name = "eth-ssz-specs", editable = "." },
+    { name = "pydantic", specifier = ">=2.12.0,<3" },
+    { name = "pytest", specifier = ">=8.3.3,<9" },
 ]
 
 [[package]]

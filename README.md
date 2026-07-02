@@ -35,6 +35,8 @@ src/ssz/
   exceptions.py        # SSZ error hierarchy
   merkleization.py     # hash_tree_root dispatch and Merkle primitives
 tests/                 # pytest unit tests mirroring the source modules
+tests/fillers/         # test-vector fillers (generate JSON conformance vectors)
+packages/testing/      # ssz-testing package: the vector generation infrastructure
 ```
 
 ## Development
@@ -54,6 +56,21 @@ just fix        # Auto-fix lint, formatting, and markdown
 
 - Python 3.12+ is required.
 - All types are modeled with [Pydantic](https://docs.pydantic.dev/) for strict validation.
+
+## Test vectors
+
+Alongside the unit tests, the repository generates language-neutral JSON conformance
+vectors that other SSZ implementations can replay. The fillers live under
+`tests/fillers/` and the generation infrastructure is the `ssz-testing` workspace
+package under `packages/testing/`.
+
+```bash
+just fill       # Generate all SSZ conformance vectors into fixtures/
+```
+
+Each vector records the type name, the SSZ `serialized` bytes, the `hash_tree_root`, and
+an `_info` block with a content hash. Decode-failure vectors carry an empty root and a
+`rejectionReason`. The generated tree lands under `fixtures/` (git-ignored).
 
 ## License
 

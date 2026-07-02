@@ -101,3 +101,35 @@ jobs:
 
       - name: Run tests with coverage gate
         run: just test-cov-gate
+
+  fill:
+    name: Fill SSZ test vectors - Python 3.12
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ssz-specs
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      - name: Install just
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
+
+      - name: Generate SSZ conformance test vectors
+        run: just fill
+
+      - name: Upload generated vectors
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssz-test-vectors
+          path: fixtures/

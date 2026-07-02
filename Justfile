@@ -40,7 +40,7 @@ typecheck *args:
 # Spell check source, tests, and docs
 [group('quality')]
 spellcheck *args:
-    uv run --group lint codespell src tests docs README.md --skip="*.lock,*.svg,.git,__pycache__,.pytest_cache" --ignore-words=.codespell-ignore-words.txt "$@"
+    uv run --group lint codespell src tests packages docs README.md --skip="*.lock,*.svg,.git,__pycache__,.pytest_cache" --ignore-words=.codespell-ignore-words.txt "$@"
 
 # Verify markdown formatting in docs/
 [group('quality')]
@@ -59,6 +59,11 @@ lock-check:
         echo "Then commit the updated uv.lock."
         exit 1
     fi
+
+# Generate SSZ conformance test vectors under fixtures/
+[group('fill')]
+fill *args:
+    uv run --group test fill --clean "$@"
 
 # Run unit tests in parallel
 [group('tests')]

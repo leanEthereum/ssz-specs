@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=77.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ssz-testing"
+version = "0.0.1"
+description = "SSZ conformance test-vector generation for the Ethereum SSZ spec"
+readme = "README.md"
+authors = [
+    { name = "Ethereum Foundation", email = "thomas.coratger@ethereum.org" },
+]
+keywords = ["ssz", "simple-serialize", "ethereum", "testing", "conformance"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "eth-ssz-specs",
+    "pydantic>=2.12.0,<3",
+    "pytest>=8.3.3,<9",
+    "click>=8.1.0,<9",
+]
+
+license = { text = "MIT" }
+
+[project.urls]
+Homepage = "https://github.com/ethereum/ssz-specs"
+Source = "https://github.com/ethereum/ssz-specs"
+Issues = "https://github.com/ethereum/ssz-specs/issues"
+
+[project.scripts]
+fill = "ssz_testing.cli:fill"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ssz_testing = ["py.typed", "pytest_ini_files/*.ini"]
+
+[tool.uv.sources]
+eth-ssz-specs = { workspace = true }
