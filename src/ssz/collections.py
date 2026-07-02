@@ -47,7 +47,17 @@ from typing import (
 from pydantic import Field, field_serializer, field_validator
 
 from ssz.byte_arrays import BaseBytes
-from ssz.exceptions import SSZSerializationError, SSZTypeError, SSZValueError
+from ssz.exceptions import (
+    SSZDefinitionError,
+    SSZFixedSizeError,
+    SSZLengthError,
+    SSZLimitError,
+    SSZScopeError,
+    SSZSerializationError,
+    SSZTypeError,
+    SSZTypeMismatch,
+    SSZValueError,
+)
 from ssz.ssz_base import BYTES_PER_LENGTH_OFFSET, SSZModel, SSZType
 from ssz.uint import Uint32
 
@@ -105,8 +115,8 @@ def _coerce_elements(element_type: type[SSZType], elements: Sequence[Any]) -> tu
         try:
             coerced.append(cast(Any, element_type)(element))
         except (SSZTypeError, SSZValueError, TypeError, ValueError) as exception:
-            raise SSZTypeError(
-                f"Expected {element_type.__name__}, got {type(element).__name__}: {exception}"
+            raise SSZTypeMismatch(
+                element_type.__name__, type(element), detail=str(exception)
             ) from exception
     return tuple(coerced)
 
@@ -289,13 +299,10 @@ class _SSZSequence[T: SSZType](SSZModel):
         if isinstance(raw_input, (list, tuple)):
             return raw_input
         if isinstance(raw_input, (str, bytes, bytearray)):
-            raise SSZTypeError(
-                f"{cls.__name__}: Expected iterable of {cls.ELEMENT_TYPE.__name__}, "
-                f"got {type(raw_input).__name__}"
-            )
+            raise SSZTypeMismatch(f"iterable of {cls.ELEMENT_TYPE.__name__}", type(raw_input))
         if hasattr(raw_input, "__iter__"):
             return list(raw_input)
-        raise SSZTypeError(f"{cls.__name__}: Expected iterable, got {type(raw_input).__name__}")
+        raise SSZTypeMismatch("iterable", type(raw_input))
 
 
 class SSZVector[T: SSZType](_SSZSequence[T]):
@@ -348,16 +355,14 @@ class SSZVector[T: SSZType](_SSZSequence[T]):
         """
         # Subclasses must declare both annotations before any instance can validate.
         if not hasattr(cls, "ELEMENT_TYPE") or not hasattr(cls, "LENGTH"):
-            raise SSZTypeError(f"{cls.__name__} must define ELEMENT_TYPE and LENGTH")
+            raise SSZDefinitionError(cls.__name__, "ELEMENT_TYPE and LENGTH")
 
         # Reject strings and non-iterables, then materialize into a sequence.
         input_elements = cls._shape_input(raw_input)
 
         # Fixed-length type: the input must contain exactly LENGTH elements.
         if len(input_elements) != cls.LENGTH:
-            raise SSZValueError(
-                f"{cls.__name__} requires exactly {cls.LENGTH} elements, got {len(input_elements)}"
-            )
+            raise SSZLengthError(cls.__name__, cls.LENGTH, len(input_elements))
 
         return _coerce_elements(cls.ELEMENT_TYPE, input_elements)
 
@@ -377,7 +382,7 @@ class SSZVector[T: SSZType](_SSZSequence[T]):
             SSZTypeError: When the element type is variable-size.
         """
         if not cls.is_fixed_size():
-            raise SSZTypeError(f"{cls.__name__}: variable-size vector has no fixed byte length")
+            raise SSZFixedSizeError(cls.__name__, "vector")
         return cls.ELEMENT_TYPE.get_byte_length() * cls.LENGTH
 
     @override
@@ -409,9 +414,7 @@ class SSZVector[T: SSZType](_SSZSequence[T]):
             element_byte_length = cls.ELEMENT_TYPE.get_byte_length()
             expected_total = element_byte_length * cls.LENGTH
             if scope != expected_total:
-                raise SSZSerializationError(
-                    f"{cls.__name__}: expected {expected_total} bytes, got {scope}"
-                )
+                raise SSZScopeError(cls.__name__, expected_total, scope)
             elements = [
                 cls.ELEMENT_TYPE.deserialize(stream, element_byte_length) for _ in range(cls.LENGTH)
             ]
@@ -498,16 +501,14 @@ class SSZList[T: SSZType](_SSZSequence[T]):
         """
         # Subclasses must declare both annotations before any instance can validate.
         if not hasattr(cls, "ELEMENT_TYPE") or not hasattr(cls, "LIMIT"):
-            raise SSZTypeError(f"{cls.__name__} must define ELEMENT_TYPE and LIMIT")
+            raise SSZDefinitionError(cls.__name__, "ELEMENT_TYPE and LIMIT")
 
         # Reject strings and non-iterables, then materialize into a sequence.
         input_elements = cls._shape_input(raw_input)
 
         # Variable-length type: any count is fine, up to LIMIT.
         if len(input_elements) > cls.LIMIT:
-            raise SSZValueError(
-                f"{cls.__name__} exceeds limit of {cls.LIMIT}, got {len(input_elements)}"
-            )
+            raise SSZLimitError(cls.__name__, cls.LIMIT, len(input_elements))
 
         return _coerce_elements(cls.ELEMENT_TYPE, input_elements)
 
@@ -542,7 +543,7 @@ class SSZList[T: SSZType](_SSZSequence[T]):
         Raises:
             SSZTypeError: Always — call this only on fixed-size types.
         """
-        raise SSZTypeError(f"{cls.__name__}: variable-size list has no fixed byte length")
+        raise SSZFixedSizeError(cls.__name__, "list")
 
     @override
     def serialize(self, stream: IO[bytes]) -> int:
@@ -584,9 +585,7 @@ class SSZList[T: SSZType](_SSZSequence[T]):
                 )
             num_elements = scope // element_size
             if num_elements > cls.LIMIT:
-                raise SSZValueError(
-                    f"{cls.__name__} exceeds limit of {cls.LIMIT}, got {num_elements}"
-                )
+                raise SSZLimitError(cls.__name__, cls.LIMIT, num_elements)
             elements = [
                 cls.ELEMENT_TYPE.deserialize(stream, element_size) for _ in range(num_elements)
             ]
@@ -603,7 +602,7 @@ class SSZList[T: SSZType](_SSZSequence[T]):
             raise SSZSerializationError(f"{cls.__name__}: invalid offset {first_offset}")
         num_elements = first_offset // BYTES_PER_LENGTH_OFFSET
         if num_elements > cls.LIMIT:
-            raise SSZValueError(f"{cls.__name__} exceeds limit of {cls.LIMIT}, got {num_elements}")
+            raise SSZLimitError(cls.__name__, cls.LIMIT, num_elements)
 
         # Read the remaining offsets, append scope as the final boundary,
         # then pairwise-iterate the boundary list to yield each body's byte span.

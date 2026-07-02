@@ -7,7 +7,7 @@ from typing import IO, Any, Self, override
 from pydantic import model_validator
 from pydantic.functional_validators import ModelWrapValidatorHandler
 
-from ssz.exceptions import SSZError, SSZSerializationError, SSZTypeError
+from ssz.exceptions import SSZError, SSZFixedSizeError, SSZSerializationError
 from ssz.ssz_base import BYTES_PER_LENGTH_OFFSET, SSZModel, SSZType
 from ssz.uint import Uint32
 
@@ -42,7 +42,7 @@ class Container(SSZModel):
     def get_byte_length(cls) -> int:
         """Sum of field widths; raises for variable-size containers."""
         if not cls.is_fixed_size():
-            raise SSZTypeError(f"{cls.__name__}: variable-size container has no fixed byte length")
+            raise SSZFixedSizeError(cls.__name__, "container")
         return sum(f.annotation.get_byte_length() for f in cls.model_fields.values())
 
     @override

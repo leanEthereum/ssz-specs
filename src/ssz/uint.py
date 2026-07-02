@@ -7,7 +7,12 @@ from typing import IO, Any, ClassVar, NoReturn, Self, SupportsInt, overload, ove
 from pydantic.annotated_handlers import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
-from ssz.exceptions import SSZSerializationError, SSZTypeError, SSZValueError
+from ssz.exceptions import (
+    SSZRangeError,
+    SSZScopeError,
+    SSZSerializationError,
+    SSZTypeMismatch,
+)
 from ssz.ssz_base import SSZType
 
 
@@ -29,12 +34,12 @@ class BaseUint(int, SSZType):
         """
         # Bool subclasses int, so reject it explicitly before the value check.
         if not isinstance(value, int) or isinstance(value, bool):
-            raise SSZTypeError(f"Expected int, got {type(value).__name__}")
+            raise SSZTypeMismatch("int", type(value))
 
         int_value = int(value)
         max_value = 2**cls.BITS - 1
         if not (0 <= int_value <= max_value):
-            raise SSZValueError(f"{int_value} out of range for {cls.__name__} [0, {max_value}]")
+            raise SSZRangeError(cls.__name__, int_value, max_value)
         return super().__new__(cls, int_value)
 
     @classmethod
@@ -93,9 +98,7 @@ class BaseUint(int, SSZType):
         # Ensure the input data has the correct number of bytes.
         expected_length = cls.get_byte_length()
         if len(data) != expected_length:
-            raise SSZSerializationError(
-                f"{cls.__name__}: expected {expected_length} bytes, got {len(data)}"
-            )
+            raise SSZScopeError(cls.__name__, expected_length, len(data))
         return cls(int.from_bytes(data, "little"))
 
     @override
@@ -125,9 +128,7 @@ class BaseUint(int, SSZType):
         serialized_bytes = stream.read(byte_length)
         # Ensure the correct number of bytes was read.
         if len(serialized_bytes) != byte_length:
-            raise SSZSerializationError(
-                f"{cls.__name__}: expected {byte_length} bytes, got {len(serialized_bytes)}"
-            )
+            raise SSZScopeError(cls.__name__, byte_length, len(serialized_bytes))
         # Decode the bytes into a new instance.
         return cls.decode_bytes(serialized_bytes)
 

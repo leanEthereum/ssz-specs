@@ -18,9 +18,16 @@ from ssz.byte_arrays import (
 from ssz.collections import SSZList, SSZVector
 from ssz.container import Container
 from ssz.exceptions import (
+    SSZDefinitionError,
     SSZError,
+    SSZFixedSizeError,
+    SSZLengthError,
+    SSZLimitError,
+    SSZRangeError,
+    SSZScopeError,
     SSZSerializationError,
     SSZTypeError,
+    SSZTypeMismatch,
     SSZValueError,
 )
 from ssz.ssz_base import SSZType
@@ -42,11 +49,18 @@ __all__ = [
     "Bytes52",
     "Bytes64",
     "Container",
+    "SSZDefinitionError",
     "SSZError",
+    "SSZFixedSizeError",
+    "SSZLengthError",
+    "SSZLimitError",
     "SSZList",
+    "SSZRangeError",
+    "SSZScopeError",
     "SSZSerializationError",
     "SSZType",
     "SSZTypeError",
+    "SSZTypeMismatch",
     "SSZValueError",
     "SSZVector",
     "Uint8",

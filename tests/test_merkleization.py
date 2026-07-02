@@ -12,6 +12,8 @@ from ssz import (
     BaseByteList,
     BaseBytes,
     Bytes32,
+    SSZTypeError,
+    SSZValueError,
     Uint8,
     Uint16,
     Uint32,
@@ -143,7 +145,7 @@ def test_merkleize_with_limit_padding() -> None:
 
 def test_merkleize_error_on_exceeding_limit() -> None:
     """Raises when the chunk count exceeds the limit."""
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(SSZValueError) as exception_info:
         merkleize(sample_chunks[0:5], limit=4)
     assert str(exception_info.value) == "merkleize: input exceeds limit"
 
@@ -168,7 +170,7 @@ def test_mix_in_length_zero() -> None:
 
 def test_mix_in_length_error_on_negative() -> None:
     """Rejects negative lengths."""
-    with pytest.raises(ValueError):
+    with pytest.raises(SSZValueError):
         mix_in_length(sample_chunks[0], -1)
 
 
@@ -774,7 +776,7 @@ def test_hash_tree_root_vector_of_variable_containers() -> None:
 )
 def test_hash_tree_root_unsupported_type_raises(unsupported_value: object) -> None:
     """The dispatch fallback rejects values without a registered handler."""
-    with pytest.raises(TypeError) as exception_info:
+    with pytest.raises(SSZTypeError) as exception_info:
         hash_tree_root(unsupported_value)
     assert str(exception_info.value) == (
         f"hash_tree_root: unsupported value type {type(unsupported_value).__name__}"

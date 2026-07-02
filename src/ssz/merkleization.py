@@ -15,6 +15,7 @@ from ssz.boolean import Boolean
 from ssz.byte_arrays import BaseByteList, BaseBytes, Bytes32
 from ssz.collections import SSZList, SSZVector
 from ssz.container import Container
+from ssz.exceptions import SSZTypeError, SSZValueError
 from ssz.uint import BaseUint
 
 BYTES_PER_CHUNK: Final = 32
@@ -98,7 +99,7 @@ def merkleize(chunks: Sequence[Bytes32], limit: int | None = None) -> Bytes32:
         The Merkle root.
 
     Raises:
-        ValueError: If the chunk count exceeds the limit.
+        SSZValueError: If the chunk count exceeds the limit.
     """
     chunk_count = len(chunks)
     if chunk_count == 0:
@@ -106,7 +107,7 @@ def merkleize(chunks: Sequence[Bytes32], limit: int | None = None) -> Bytes32:
     if limit is None:
         width = _next_pow2(chunk_count)
     elif limit < chunk_count:
-        raise ValueError("merkleize: input exceeds limit")
+        raise SSZValueError("merkleize: input exceeds limit")
     else:
         width = _next_pow2(limit)
     if width == 1:
@@ -150,10 +151,10 @@ def mix_in_length(root: Bytes32, length: int) -> Bytes32:
         The length-mixed root.
 
     Raises:
-        ValueError: If the length is negative.
+        SSZValueError: If the length is negative.
     """
     if length < 0:
-        raise ValueError("length must be non-negative")
+        raise SSZValueError("length must be non-negative")
     return Bytes32(sha256(root + length.to_bytes(32, "little")).digest())
 
 
@@ -202,9 +203,9 @@ def hash_tree_root(value: object) -> Bytes32:
     Compute the SSZ Merkle root of a value.
 
     Raises:
-        TypeError: If the value's type has no registered handler.
+        SSZTypeError: If the value's type has no registered handler.
     """
-    raise TypeError(f"hash_tree_root: unsupported value type {type(value).__name__}")
+    raise SSZTypeError(f"hash_tree_root: unsupported value type {type(value).__name__}")
 
 
 @hash_tree_root.register(BaseUint)

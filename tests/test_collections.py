@@ -211,16 +211,13 @@ class TestSSZVectorValidator:
         """Strings, bytes, and bytearrays never iterate as element collections."""
         with pytest.raises(TypeOrValidationError) as exception_info:
             Uint8Vector2(data=bad_input)
-        assert (
-            str(exception_info.value)
-            == f"Uint8Vector2: Expected iterable of Uint8, got {type_name}"
-        )
+        assert str(exception_info.value) == f"Expected iterable of Uint8, got {type_name}"
 
     def test_non_iterable_scalar_rejected(self) -> None:
         """Scalar inputs without an iterator interface raise an iterable error."""
         with pytest.raises(TypeOrValidationError) as exception_info:
             Uint8Vector2(data=cast(Any, 42))
-        assert str(exception_info.value) == "Uint8Vector2: Expected iterable, got int"
+        assert str(exception_info.value) == "Expected iterable, got int"
 
     def test_generator_input_coerced(self) -> None:
         """A generator is materialized and each value is coerced to ELEMENT_TYPE."""
@@ -421,15 +418,13 @@ class TestSSZListValidator:
         """Strings, bytes, and bytearrays never iterate as element collections."""
         with pytest.raises(TypeOrValidationError) as exception_info:
             Uint8List4(data=bad_input)
-        assert (
-            str(exception_info.value) == f"Uint8List4: Expected iterable of Uint8, got {type_name}"
-        )
+        assert str(exception_info.value) == f"Expected iterable of Uint8, got {type_name}"
 
     def test_non_iterable_scalar_rejected(self) -> None:
         """Scalar inputs without an iterator interface raise an iterable error."""
         with pytest.raises(TypeOrValidationError) as exception_info:
             Uint8List4(data=cast(Any, 5))
-        assert str(exception_info.value) == "Uint8List4: Expected iterable, got int"
+        assert str(exception_info.value) == "Expected iterable, got int"
 
     def test_generator_input_coerced(self) -> None:
         """A generator is materialized and each value is coerced to ELEMENT_TYPE."""

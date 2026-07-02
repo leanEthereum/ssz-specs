@@ -7,7 +7,7 @@ from typing import IO, Any, NoReturn, Self, override
 from pydantic.annotated_handlers import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from ssz.exceptions import SSZSerializationError, SSZTypeError, SSZValueError
+from ssz.exceptions import SSZSerializationError, SSZTypeMismatch, SSZValueError
 from ssz.ssz_base import SSZType
 
 
@@ -42,7 +42,7 @@ class Boolean(int, SSZType):
             SSZValueError: If value is an integer outside 0 or 1.
         """
         if not isinstance(value, int):
-            raise SSZTypeError(f"Expected bool or int, got {type(value).__name__}")
+            raise SSZTypeMismatch("bool or int", type(value))
 
         # Coerce to a plain int before the membership test:
         #

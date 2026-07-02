@@ -26,7 +26,16 @@ from typing import (
 from pydantic import Field, field_validator
 
 from ssz.boolean import Boolean
-from ssz.exceptions import SSZSerializationError, SSZTypeError, SSZValueError
+from ssz.exceptions import (
+    SSZDefinitionError,
+    SSZFixedSizeError,
+    SSZLengthError,
+    SSZLimitError,
+    SSZScopeError,
+    SSZSerializationError,
+    SSZTypeMismatch,
+    SSZValueError,
+)
 from ssz.ssz_base import SSZModel
 
 
@@ -64,7 +73,7 @@ class BaseBitvector(SSZModel):
         """Enforce the exact bit count and coerce inputs into booleans."""
         # Subclasses must declare LENGTH before any instances can be validated.
         if not hasattr(cls, "LENGTH"):
-            raise SSZTypeError(f"{cls.__name__} must define LENGTH")
+            raise SSZDefinitionError(cls.__name__, "LENGTH")
 
         # Materialize generic iterables into a tuple so the length check works.
         if not isinstance(bits_input, (list, tuple)):
@@ -72,9 +81,7 @@ class BaseBitvector(SSZModel):
 
         # Fixed-length type: the input must contain exactly LENGTH elements.
         if len(bits_input) != cls.LENGTH:
-            raise SSZValueError(
-                f"{cls.__name__} requires exactly {cls.LENGTH} elements, got {len(bits_input)}"
-            )
+            raise SSZLengthError(cls.__name__, cls.LENGTH, len(bits_input))
 
         # Wrap each value in Boolean — the constructor rejects anything outside 0 or 1.
         return tuple(Boolean(bit) for bit in bits_input)
@@ -104,14 +111,10 @@ class BaseBitvector(SSZModel):
         """Read SSZ bytes from a stream and return an instance."""
         expected_byte_count = cls.get_byte_length()
         if scope != expected_byte_count:
-            raise SSZSerializationError(
-                f"{cls.__name__}: expected {expected_byte_count} bytes, got {scope}"
-            )
+            raise SSZScopeError(cls.__name__, expected_byte_count, scope)
         serialized_bytes = stream.read(scope)
         if len(serialized_bytes) != scope:
-            raise SSZSerializationError(
-                f"{cls.__name__}: expected {scope} bytes, got {len(serialized_bytes)}"
-            )
+            raise SSZScopeError(cls.__name__, scope, len(serialized_bytes))
         return cls.decode_bytes(serialized_bytes)
 
     @override
@@ -226,7 +229,7 @@ class BaseBitlist(SSZModel):
         """Enforce the maximum bit count and coerce inputs into booleans."""
         # Subclasses must declare LIMIT before any instances can be validated.
         if not hasattr(cls, "LIMIT"):
-            raise SSZTypeError(f"{cls.__name__} must define LIMIT")
+            raise SSZDefinitionError(cls.__name__, "LIMIT")
 
         # Accept different input shapes:
         #
@@ -238,11 +241,11 @@ class BaseBitlist(SSZModel):
         elif hasattr(bits_input, "__iter__") and not isinstance(bits_input, (str, bytes)):
             elements = list(bits_input)
         else:
-            raise SSZTypeError(f"Expected iterable, got {type(bits_input).__name__}")
+            raise SSZTypeMismatch("iterable", type(bits_input))
 
         # Variable-length type: any count is fine, up to LIMIT.
         if len(elements) > cls.LIMIT:
-            raise SSZValueError(f"{cls.__name__} exceeds limit of {cls.LIMIT}, got {len(elements)}")
+            raise SSZLimitError(cls.__name__, cls.LIMIT, len(elements))
 
         # Wrap each value in Boolean — the constructor rejects anything outside 0 or 1.
         return tuple(Boolean(bit) for bit in elements)
@@ -284,7 +287,7 @@ class BaseBitlist(SSZModel):
         Raises:
             SSZTypeError: Always — call this only on fixed-size types.
         """
-        raise SSZTypeError(f"{cls.__name__}: variable-size bitlist has no fixed byte length")
+        raise SSZFixedSizeError(cls.__name__, "bitlist")
 
     @override
     def serialize(self, stream: IO[bytes]) -> int:
@@ -299,9 +302,7 @@ class BaseBitlist(SSZModel):
         """Read SSZ bytes from a stream and return an instance."""
         serialized_bytes = stream.read(scope)
         if len(serialized_bytes) != scope:
-            raise SSZSerializationError(
-                f"{cls.__name__}: expected {scope} bytes, got {len(serialized_bytes)}"
-            )
+            raise SSZScopeError(cls.__name__, scope, len(serialized_bytes))
         return cls.decode_bytes(serialized_bytes)
 
     @override
@@ -439,6 +440,6 @@ class BaseBitlist(SSZModel):
         # Recovered bits: [1, 0, 1]
         num_bits = delimiter_pos
         if num_bits > cls.LIMIT:
-            raise SSZValueError(f"{cls.__name__} exceeds limit of {cls.LIMIT}, got {num_bits}")
+            raise SSZLimitError(cls.__name__, cls.LIMIT, num_bits)
 
         return cls(data=[Boolean((data[i // 8] >> (i % 8)) & 1) for i in range(num_bits)])
