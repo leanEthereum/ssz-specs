@@ -13,7 +13,7 @@ from ssz import ZERO_HASH
 from ssz.bitfields import BaseBitlist, BaseBitvector
 from ssz.boolean import Boolean
 from ssz.byte_arrays import BaseByteList, BaseBytes, Bytes32
-from ssz.collections import List, SSZVector
+from ssz.collections import List, Vector
 from ssz.container import Container
 from ssz.exceptions import SSZTypeError, SSZValueError
 from ssz.uint import BaseUint
@@ -247,7 +247,7 @@ def _hash_tree_root_bitlist_base(value: BaseBitlist) -> Bytes32:
 
 
 @hash_tree_root.register
-def _hash_tree_root_vector(value: SSZVector) -> Bytes32:
+def _hash_tree_root_vector(value: Vector) -> Bytes32:
     cls = type(value)
     element_type, length = cls.ELEMENT_TYPE, cls.LENGTH
     if issubclass(element_type, (BaseUint, Boolean)):

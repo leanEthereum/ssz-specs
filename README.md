@@ -15,7 +15,7 @@ repository implements:
 - **Basic types**: `Boolean`, `Uint8`/`Uint16`/`Uint32`/`Uint64`.
 - **Byte arrays**: fixed `Bytes4` … `Bytes64` and variable `ByteList`.
 - **Bitfields**: `Bitvector` and `Bitlist`.
-- **Composite types**: `SSZVector`, `List`, and `Container`.
+- **Composite types**: `Vector`, `List`, and `Container`.
 - **(De)serialization**: canonical encode/decode with strict, offset-based decoding.
 - **Merkleization**: `hash_tree_root`, `merkleize`, and `mix_in_length`.
 
@@ -30,7 +30,7 @@ src/ssz/
   uint.py              # Uint8/16/32/64
   byte_arrays.py       # fixed byte vectors and byte lists
   bitfields.py         # Bitvector / Bitlist
-  collections.py       # SSZVector / List
+  collections.py       # Vector / List
   container.py         # Container
   exceptions.py        # SSZ error hierarchy
   merkleization.py     # hash_tree_root dispatch and Merkle primitives

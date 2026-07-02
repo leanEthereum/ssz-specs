@@ -1,4 +1,4 @@
-"""Tests for the SSZVector and List types."""
+"""Tests for the Vector and List types."""
 
 from typing import Any, cast
 
@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 from ssz import Bytes32, Uint8, Uint16, Uint32
 from ssz.boolean import Boolean
-from ssz.collections import List, SSZVector, _validate_offsets
+from ssz.collections import List, Vector, _validate_offsets
 from ssz.container import Container
 from ssz.exceptions import SSZSerializationError, SSZTypeError, SSZValueError
 
@@ -36,37 +36,37 @@ class VariableContainer(Container):
     b: Uint16List4
 
 
-class Uint16Vector2(SSZVector[Uint16]):
+class Uint16Vector2(Vector[Uint16]):
     """A vector of exactly 2 Uint16 values."""
 
     LENGTH = 2
 
 
-class Uint8Vector4(SSZVector[Uint8]):
+class Uint8Vector4(Vector[Uint8]):
     """A vector of exactly 4 Uint8 values."""
 
     LENGTH = 4
 
 
-class Uint8Vector48(SSZVector[Uint8]):
+class Uint8Vector48(Vector[Uint8]):
     """A vector of exactly 48 Uint8 values."""
 
     LENGTH = 48
 
 
-class Uint8Vector96(SSZVector[Uint8]):
+class Uint8Vector96(Vector[Uint8]):
     """A vector of exactly 96 Uint8 values."""
 
     LENGTH = 96
 
 
-class FixedContainerVector2(SSZVector[FixedContainer]):
+class FixedContainerVector2(Vector[FixedContainer]):
     """A vector of exactly 2 FixedContainer values."""
 
     LENGTH = 2
 
 
-class VariableContainerVector2(SSZVector[VariableContainer]):
+class VariableContainerVector2(Vector[VariableContainer]):
     """A vector of exactly 2 VariableContainer values."""
 
     LENGTH = 2
@@ -114,25 +114,25 @@ class FixedContainerList2(List[FixedContainer]):
     LIMIT = 2
 
 
-class Uint8Vector32(SSZVector[Uint8]):
+class Uint8Vector32(Vector[Uint8]):
     """A vector of exactly 32 Uint8 values."""
 
     LENGTH = 32
 
 
-class Uint16Vector32(SSZVector[Uint16]):
+class Uint16Vector32(Vector[Uint16]):
     """A vector of exactly 32 Uint16 values."""
 
     LENGTH = 32
 
 
-class Uint8Vector64(SSZVector[Uint8]):
+class Uint8Vector64(Vector[Uint8]):
     """A vector of exactly 64 Uint8 values."""
 
     LENGTH = 64
 
 
-class Uint8Vector2(SSZVector[Uint8]):
+class Uint8Vector2(Vector[Uint8]):
     """A vector of exactly 2 Uint8 values."""
 
     LENGTH = 2
@@ -174,13 +174,13 @@ class Uint8List4Model(BaseModel):
     value: Uint8List4
 
 
-class TestSSZVectorValidator:
-    """Tests for the SSZVector field validator and its rejection paths."""
+class TestVectorValidator:
+    """Tests for the Vector field validator and its rejection paths."""
 
     def test_missing_element_type_and_length_rejected(self) -> None:
         """A subclass without ELEMENT_TYPE or LENGTH cannot validate any input."""
 
-        class MissingBoth(SSZVector):
+        class MissingBoth(Vector):
             pass
 
         with pytest.raises(TypeOrValidationError) as exception_info:
@@ -190,7 +190,7 @@ class TestSSZVectorValidator:
     def test_missing_length_rejected(self) -> None:
         """A subclass with ELEMENT_TYPE but no LENGTH cannot validate."""
 
-        class MissingLengthVector(SSZVector[Uint8]):
+        class MissingLengthVector(Vector[Uint8]):
             pass
 
         with pytest.raises(TypeOrValidationError) as exception_info:
@@ -257,8 +257,8 @@ class TestSSZVectorValidator:
         assert str(exception_info.value) == "Uint8Vector4 requires exactly 4 elements, got 5"
 
 
-class TestSSZVectorClassMetadata:
-    """Tests for SSZVector class-level metadata and inference."""
+class TestVectorClassMetadata:
+    """Tests for Vector class-level metadata and inference."""
 
     def test_class_getitem_creates_specialized_type(self) -> None:
         """Explicit subclasses keep distinct LENGTH and ELEMENT_TYPE bindings."""
@@ -271,7 +271,7 @@ class TestSSZVectorClassMetadata:
     def test_init_subclass_infers_element_type_from_generic(self) -> None:
         """Generic subclasses copy the bracketed type into ELEMENT_TYPE."""
 
-        class LocalVector(SSZVector[Uint16]):
+        class LocalVector(Vector[Uint16]):
             LENGTH = 1
 
         assert LocalVector.ELEMENT_TYPE is Uint16
@@ -279,19 +279,19 @@ class TestSSZVectorClassMetadata:
     def test_init_subclass_preserves_explicit_element_type(self) -> None:
         """An explicit ELEMENT_TYPE in the class body wins over generic inference."""
 
-        class LocalVector(SSZVector[Uint8]):
+        class LocalVector(Vector[Uint8]):
             ELEMENT_TYPE = Uint16
             LENGTH = 1
 
         assert LocalVector.ELEMENT_TYPE is Uint16
 
     def test_instantiate_raw_type_raises_error(self) -> None:
-        """The raw SSZVector base cannot be instantiated as a Pydantic model."""
+        """The raw Vector base cannot be instantiated as a Pydantic model."""
         with pytest.raises(
             TypeError,
             match=r"^BaseModel\.__init__\(\) takes 1 positional argument but 2 were given\Z",
         ):
-            SSZVector([])  # type: ignore[misc]
+            Vector([])  # type: ignore[misc]
 
     def test_fixed_size_vector_reports_fixed_size_true(self) -> None:
         """A vector of fixed-size elements is itself fixed-size."""
@@ -317,8 +317,8 @@ class TestSSZVectorClassMetadata:
         )
 
 
-class TestSSZVectorAccessors:
-    """Tests for SSZVector accessor and immutability behavior."""
+class TestVectorAccessors:
+    """Tests for Vector accessor and immutability behavior."""
 
     def test_instantiation_success(self) -> None:
         """Building with the exact element count yields a sequence of typed values."""
@@ -365,7 +365,7 @@ class TestSSZVectorAccessors:
             instance[0] = 3  # type: ignore[index]
 
     def test_pydantic_dict_input_coerces_to_vector(self) -> None:
-        """Pydantic coerces a dict payload into an SSZVector with typed elements."""
+        """Pydantic coerces a dict payload into an Vector with typed elements."""
         instance = Uint8Vector2Model(value=cast(Any, {"data": [10, 20]}))
 
         assert instance.value == Uint8Vector2(data=[Uint8(10), Uint8(20)])
@@ -612,8 +612,8 @@ class TestListAccessors:
         assert str(exception_info.value) == "Uint8List4 exceeds limit of 4, got 5"
 
 
-class TestSSZVectorSerialization:
-    """Tests SSZ serialization and deserialization for SSZVector."""
+class TestVectorSerialization:
+    """Tests SSZ serialization and deserialization for Vector."""
 
     @pytest.mark.parametrize(
         "vector_type, elements, expected_hex",
@@ -648,7 +648,7 @@ class TestSSZVectorSerialization:
     )
     def test_fixed_size_element_vector_roundtrip(
         self,
-        vector_type: type[SSZVector],
+        vector_type: type[Vector],
         elements: tuple[Any, ...],
         expected_hex: str,
     ) -> None:

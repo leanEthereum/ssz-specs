@@ -15,7 +15,7 @@ from ssz.byte_arrays import (
     Bytes52,
     Bytes64,
 )
-from ssz.collections import List, SSZVector
+from ssz.collections import List, Vector
 from ssz.container import Container
 from ssz.exceptions import (
     SSZDefinitionError,
@@ -62,9 +62,9 @@ __all__ = [
     "SSZTypeError",
     "SSZTypeMismatch",
     "SSZValueError",
-    "SSZVector",
     "Uint8",
     "Uint16",
     "Uint32",
     "Uint64",
+    "Vector",
 ]

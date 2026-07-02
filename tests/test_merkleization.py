@@ -21,7 +21,7 @@ from ssz import (
 )
 from ssz.bitfields import BaseBitlist, BaseBitvector
 from ssz.boolean import Boolean
-from ssz.collections import List, SSZVector
+from ssz.collections import List, Vector
 from ssz.container import Container
 from ssz.merkleization import (
     _next_pow2,
@@ -291,25 +291,25 @@ class Bitlist512(BaseBitlist):
     LIMIT = 512
 
 
-class Uint16Vector1(SSZVector[Uint16]):
+class Uint16Vector1(Vector[Uint16]):
     """Single-element vector of Uint16."""
 
     LENGTH = 1
 
 
-class Uint16Vector2(SSZVector[Uint16]):
+class Uint16Vector2(Vector[Uint16]):
     """Two-element vector of Uint16."""
 
     LENGTH = 2
 
 
-class Uint16Vector16(SSZVector[Uint16]):
+class Uint16Vector16(Vector[Uint16]):
     """Sixteen-element vector of Uint16 filling exactly one chunk."""
 
     LENGTH = 16
 
 
-class Bytes32Vector3(SSZVector[Bytes32]):
+class Bytes32Vector3(Vector[Bytes32]):
     """Vector of three composite Bytes32 elements."""
 
     LENGTH = 3
@@ -368,13 +368,13 @@ class Var(Container):
     C: Uint8
 
 
-class FixedVector4(SSZVector[Fixed]):
+class FixedVector4(Vector[Fixed]):
     """Vector of four fixed-size containers."""
 
     LENGTH = 4
 
 
-class VarVector2(SSZVector[Var]):
+class VarVector2(Vector[Var]):
     """Vector of two variable-size containers."""
 
     LENGTH = 2

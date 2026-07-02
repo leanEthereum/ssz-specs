@@ -12,11 +12,11 @@ from ssz import (
     Bytes52,
     Bytes64,
     List,
-    SSZVector,
     Uint8,
     Uint16,
     Uint32,
     Uint64,
+    Vector,
 )
 from ssz_testing import SSZTestFiller
 
@@ -39,13 +39,13 @@ class SampleBitlist16(BaseBitlist):
     LIMIT: ClassVar[int] = 16
 
 
-class SampleUint16Vector3(SSZVector[Uint16]):
+class SampleUint16Vector3(Vector[Uint16]):
     """Fixed-length vector of 3 two-byte elements (6 bytes total)."""
 
     LENGTH: ClassVar[int] = 3
 
 
-class SampleUint64Vector4(SSZVector[Uint64]):
+class SampleUint64Vector4(Vector[Uint64]):
     """Fixed-length vector of 4 eight-byte elements (32 bytes, one full chunk)."""
 
     LENGTH: ClassVar[int] = 4

@@ -154,7 +154,7 @@ class _SSZSequence[T: SSZType](SSZModel):
 
         When a subclass is written as:
 
-            class Uint16Vector2(SSZVector[Uint16]):
+            class Uint16Vector2(Vector[Uint16]):
                 LENGTH = 2
 
         the Uint16 inside the brackets is copied into Uint16Vector2.ELEMENT_TYPE.
@@ -172,7 +172,7 @@ class _SSZSequence[T: SSZType](SSZModel):
             # An empty default skips bases that were never made generic.
             metadata = getattr(base, "__pydantic_generic_metadata__", {})
 
-            # Origin is the unparameterized class — for example SSZVector itself.
+            # Origin is the unparameterized class — for example Vector itself.
             # Skip bases outside the sequence hierarchy.
             origin = metadata.get("origin")
             if not (isinstance(origin, type) and issubclass(origin, _SSZSequence)):
@@ -305,7 +305,7 @@ class _SSZSequence[T: SSZType](SSZModel):
         raise SSZTypeMismatch("iterable", type(raw_input))
 
 
-class SSZVector[T: SSZType](_SSZSequence[T]):
+class Vector[T: SSZType](_SSZSequence[T]):
     """
     Fixed-length, immutable SSZ sequence.
 
