@@ -373,3 +373,15 @@ class Uint64(BaseUint):
     """A type representing a 64-bit unsigned integer (uint64)."""
 
     BITS = 64
+
+
+class Uint128(BaseUint):
+    """A type representing a 128-bit unsigned integer (uint128)."""
+
+    BITS = 128
+
+
+class Uint256(BaseUint):
+    """A type representing a 256-bit unsigned integer (uint256)."""
+
+    BITS = 256

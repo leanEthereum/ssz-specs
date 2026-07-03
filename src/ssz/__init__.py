@@ -31,7 +31,7 @@ from ssz.exceptions import (
     SSZValueError,
 )
 from ssz.ssz_base import SSZType
-from ssz.uint import Uint8, Uint16, Uint32, Uint64
+from ssz.uint import Uint8, Uint16, Uint32, Uint64, Uint128, Uint256
 
 __all__ = [
     "ZERO_HASH",
@@ -66,5 +66,7 @@ __all__ = [
     "Uint16",
     "Uint32",
     "Uint64",
+    "Uint128",
+    "Uint256",
     "Vector",
 ]

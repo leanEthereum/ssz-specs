@@ -16,6 +16,8 @@ from ssz import (
     Uint16,
     Uint32,
     Uint64,
+    Uint128,
+    Uint256,
     Vector,
 )
 from ssz_testing import SSZTestFiller
@@ -411,6 +413,162 @@ def test_uint64_max(ssz_test: SSZTestFiller) -> None:
     - the encoding is eight bytes of 0xff.
     """
     ssz_test(type_name="Uint64", value=Uint64(2**64 - 1))
+
+
+def test_uint128_zero(ssz_test: SSZTestFiller) -> None:
+    """
+    A sixteen-byte uint at its lower bound round-trips unchanged.
+
+    Given
+    -----
+    - the value 0 as a sixteen-byte uint.
+
+    When
+    ----
+    - the value is encoded and then decoded.
+
+    Then
+    ----
+    - the decoded value equals the original.
+    """
+    ssz_test(type_name="Uint128", value=Uint128(0))
+
+
+def test_uint128_one(ssz_test: SSZTestFiller) -> None:
+    """
+    The smallest non-zero sixteen-byte uint round-trips unchanged.
+
+    Given
+    -----
+    - the value 1 as a sixteen-byte uint.
+
+    When
+    ----
+    - the value is encoded and then decoded.
+
+    Then
+    ----
+    - the decoded value equals the original.
+    """
+    ssz_test(type_name="Uint128", value=Uint128(1))
+
+
+def test_uint128_mid(ssz_test: SSZTestFiller) -> None:
+    """
+    A sixteen-byte uint with its high bit set round-trips unchanged.
+
+    Given
+    -----
+    - the value 2^127 as a sixteen-byte uint.
+
+    When
+    ----
+    - the value is encoded and then decoded.
+
+    Then
+    ----
+    - the decoded value equals the original.
+    - the sixteen-byte little-endian layout is preserved.
+    """
+    ssz_test(type_name="Uint128", value=Uint128(2**127))
+
+
+def test_uint128_max(ssz_test: SSZTestFiller) -> None:
+    """
+    A sixteen-byte uint at its upper bound round-trips unchanged.
+
+    Given
+    -----
+    - the largest sixteen-byte uint value (2^128 - 1).
+
+    When
+    ----
+    - the value is encoded and then decoded.
+
+    Then
+    ----
+    - the decoded value equals the original.
+    - the encoding is sixteen bytes of 0xff.
+    """
+    ssz_test(type_name="Uint128", value=Uint128(2**128 - 1))
+
+
+def test_uint256_zero(ssz_test: SSZTestFiller) -> None:
+    """
+    A thirty-two-byte uint at its lower bound round-trips unchanged.
+
+    Given
+    -----
+    - the value 0 as a thirty-two-byte uint.
+
+    When
+    ----
+    - the value is encoded and then decoded.
+
+    Then
+    ----
+    - the decoded value equals the original.
+    """
+    ssz_test(type_name="Uint256", value=Uint256(0))
+
+
+def test_uint256_one(ssz_test: SSZTestFiller) -> None:
+    """
+    The smallest non-zero thirty-two-byte uint round-trips unchanged.
+
+    Given
+    -----
+    - the value 1 as a thirty-two-byte uint.
+
+    When
+    ----
+    - the value is encoded and then decoded.
+
+    Then
+    ----
+    - the decoded value equals the original.
+    """
+    ssz_test(type_name="Uint256", value=Uint256(1))
+
+
+def test_uint256_mid(ssz_test: SSZTestFiller) -> None:
+    """
+    A thirty-two-byte uint with its high bit set round-trips unchanged.
+
+    Given
+    -----
+    - the value 2^255 as a thirty-two-byte uint.
+
+    When
+    ----
+    - the value is encoded and then decoded.
+
+    Then
+    ----
+    - the decoded value equals the original.
+    - the thirty-two-byte little-endian layout is preserved.
+    """
+    ssz_test(type_name="Uint256", value=Uint256(2**255))
+
+
+def test_uint256_max(ssz_test: SSZTestFiller) -> None:
+    """
+    A thirty-two-byte uint at its upper bound round-trips unchanged.
+
+    Given
+    -----
+    - the largest thirty-two-byte uint value (2^256 - 1).
+
+    When
+    ----
+    - the value is encoded and then decoded.
+
+    Then
+    ----
+    - the decoded value equals the original.
+    - the encoding is thirty-two bytes of 0xff.
+    """
+    ssz_test(type_name="Uint256", value=Uint256(2**256 - 1))
 
 
 def test_bytes4_zero(ssz_test: SSZTestFiller) -> None:

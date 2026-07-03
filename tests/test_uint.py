@@ -9,11 +9,11 @@ import pytest
 from hypothesis import given, strategies as st
 from pydantic import BaseModel, ValidationError
 
-from ssz import Uint8, Uint16, Uint32, Uint64
+from ssz import Uint8, Uint16, Uint32, Uint64, Uint128, Uint256
 from ssz.exceptions import SSZSerializationError, SSZTypeError, SSZValueError
 from ssz.uint import BaseUint
 
-ALL_UINT_TYPES = (Uint8, Uint16, Uint32, Uint64)
+ALL_UINT_TYPES = (Uint8, Uint16, Uint32, Uint64, Uint128, Uint256)
 """A collection of all Uint types to test against."""
 
 CROSS_UINT_TYPE_PAIRS = list(permutations(ALL_UINT_TYPES, 2))
@@ -37,11 +37,21 @@ class Uint64Model(BaseModel):
     value: Uint64
 
 
+class Uint128Model(BaseModel):
+    value: Uint128
+
+
+class Uint256Model(BaseModel):
+    value: Uint256
+
+
 UINT_MODELS: dict[Type[BaseUint], Type[BaseModel]] = {
     Uint8: Uint8Model,
     Uint16: Uint16Model,
     Uint32: Uint32Model,
     Uint64: Uint64Model,
+    Uint128: Uint128Model,
+    Uint256: Uint256Model,
 }
 """Mapping from Uint types to their corresponding Pydantic model classes."""
 

@@ -18,6 +18,8 @@ from ssz import (
     Uint16,
     Uint32,
     Uint64,
+    Uint128,
+    Uint256,
 )
 from ssz.bitfields import BaseBitlist, BaseBitvector
 from ssz.boolean import Boolean
@@ -405,6 +407,13 @@ def le_padded(integer_value: int, byte_length: int) -> Bytes32:
         (Uint64, 8, 0x0000000000000000),
         (Uint64, 8, 0x0123456789ABCDEF),
         (Uint64, 8, 0xFFFFFFFFFFFFFFFF),
+        (Uint128, 16, 0x00000000000000000000000000000000),
+        (Uint128, 16, 0x0123456789ABCDEF0123456789ABCDEF),
+        (Uint128, 16, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
+        # A uint256 fills exactly one 32-byte chunk, so its root is that chunk verbatim.
+        (Uint256, 32, 0x0000000000000000000000000000000000000000000000000000000000000000),
+        (Uint256, 32, 0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF),
+        (Uint256, 32, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
     ],
 )
 def test_hash_tree_root_uints(uint_type: type, byte_length: int, integer_value: int) -> None:
