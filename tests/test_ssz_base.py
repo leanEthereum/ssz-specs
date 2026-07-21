@@ -230,8 +230,36 @@ class TestSSZCollectionMutation:
         with pytest.raises((SSZValueError, ValidationError)):
             values.data = cast(Any, [1, 2, 3, 4, 5])
 
-    def test_containers_stay_frozen(self) -> None:
-        """Containers keep the frozen contract — field assignment raises."""
+    def test_container_field_assignment_coerces(self) -> None:
+        """Containers are mutable; assigned values coerce into the field type."""
         container = TwoFieldContainer(x=Uint8(1), y=Uint16(2))
+        container.x = 3  # ty: ignore[invalid-assignment]
+        assert container == TwoFieldContainer(x=Uint8(3), y=Uint16(2))
+
+    def test_container_collection_field_raw_payload_rejected(self) -> None:
+        """A raw payload assigned to a collection field fails, exactly as at construction."""
+        container = ThreeFieldContainer(a=Uint8(0), b=Uint64(0), c=Uint16List4(data=[]))
         with pytest.raises(ValidationError):
-            container.x = Uint8(3)
+            container.c = [1, 2]  # ty: ignore[invalid-assignment]
+        container.c = Uint16List4(data=[Uint16(1), Uint16(2)])
+        assert container.c == Uint16List4(data=[Uint16(1), Uint16(2)])
+
+    def test_container_assignment_of_typed_value_passes_through(self) -> None:
+        """An already-typed value is assigned without re-coercion."""
+        container = TwoFieldContainer(x=Uint8(1), y=Uint16(2))
+        container.y = Uint16(9)
+        assert container.y == Uint16(9)
+
+    def test_container_unknown_attribute_assignment_raises(self) -> None:
+        """Assigning an attribute that is not a field still raises."""
+        container = TwoFieldContainer(x=Uint8(1), y=Uint16(2))
+        with pytest.raises((AttributeError, ValueError)):
+            container.unknown = 1  # ty: ignore[unresolved-attribute]
+
+    def test_container_hashes_by_tree_root(self) -> None:
+        """Containers hash by Merkle root, so they work as dict keys."""
+        first = TwoFieldContainer(x=Uint8(1), y=Uint16(2))
+        second = TwoFieldContainer(x=Uint8(1), y=Uint16(2))
+        assert hash(first) == hash(second)
+        lookup = {first: "found"}
+        assert lookup[second] == "found"
