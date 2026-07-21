@@ -26,7 +26,7 @@ from ssz.exceptions import (
     SSZScopeError,
     SSZSerializationError,
 )
-from ssz.ssz_base import SSZModel, SSZType
+from ssz.ssz_base import SSZCollection, SSZType
 
 
 class BaseBytes(bytes, SSZType):
@@ -286,7 +286,7 @@ ZERO_HASH: Bytes32 = Bytes32.zero()
 """All-zero 32-byte hash, used as a canonical empty/uninitialized root."""
 
 
-class BaseByteList(SSZModel):
+class BaseByteList(SSZCollection):
     r"""
     Variable-length SSZ byte array with 0 to N bytes.
 

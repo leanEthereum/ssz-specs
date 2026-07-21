@@ -58,7 +58,7 @@ from ssz.exceptions import (
     SSZTypeMismatch,
     SSZValueError,
 )
-from ssz.ssz_base import BYTES_PER_LENGTH_OFFSET, SSZModel, SSZType
+from ssz.ssz_base import BYTES_PER_LENGTH_OFFSET, SSZCollection, SSZType
 from ssz.uint import Uint32
 
 
@@ -121,7 +121,7 @@ def _coerce_elements(element_type: type[SSZType], elements: Sequence[Any]) -> tu
     return tuple(coerced)
 
 
-class _SSZSequence[T: SSZType](SSZModel):
+class _SSZSequence[T: SSZType](SSZCollection):
     """
     Shared scaffolding for fixed- and variable-length SSZ sequences.
 

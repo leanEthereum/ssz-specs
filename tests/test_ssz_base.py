@@ -1,9 +1,14 @@
 """Tests for SSZModel and SSZType base class behavior."""
 
+from typing import Any, cast
+
+import pytest
+
 from ssz import Uint8, Uint16, Uint64
-from ssz.bitfields import BaseBitlist
+from ssz.bitfields import BaseBitlist, BaseBitvector
 from ssz.boolean import Boolean
-from ssz.collections import List
+from ssz.byte_arrays import BaseByteList
+from ssz.collections import List, Vector
 from ssz.container import Container
 
 
@@ -11,6 +16,24 @@ class Uint16List4(List[Uint16]):
     """A list with up to 4 Uint16 values."""
 
     LIMIT = 4
+
+
+class Uint16Vector2(Vector[Uint16]):
+    """A vector of exactly 2 Uint16 values."""
+
+    LENGTH = 2
+
+
+class SmallBitvector(BaseBitvector):
+    """A bitvector with exactly 3 bits."""
+
+    LENGTH = 3
+
+
+class SmallByteList(BaseByteList):
+    """A byte list with up to 10 bytes."""
+
+    LIMIT = 10
 
 
 class TwoFieldContainer(Container):
@@ -105,3 +128,53 @@ class TestSSZTypeEncodeDecode:
         """Encoding then decoding must recover the original object."""
         original = TwoFieldContainer(x=Uint8(255), y=Uint16(1000))
         assert TwoFieldContainer.decode_bytes(original.encode_bytes()) == original
+
+
+class TestSSZCollectionOf:
+    """
+    Tests for the `of` factory classmethod.
+
+    `of` is the positional construction form: each argument is exactly one
+    element, and no argument is ever spread.
+    """
+
+    def test_of_builds_from_elements(self) -> None:
+        """Each argument becomes one element."""
+        assert Uint16List4.of(1, 2, 3) == Uint16List4(data=[Uint16(1), Uint16(2), Uint16(3)])
+
+    def test_of_with_no_elements_builds_empty(self) -> None:
+        """No arguments build an empty collection."""
+        assert Uint16List4.of() == Uint16List4(data=[])
+
+    def test_of_single_element_is_never_spread(self) -> None:
+        """One argument is one element, never a whole data value."""
+        assert Uint16List4.of(7) == Uint16List4(data=[Uint16(7)])
+
+    def test_of_vector(self) -> None:
+        """Vectors build from exactly LENGTH element arguments."""
+        assert Uint16Vector2.of(1, 2) == Uint16Vector2(data=[Uint16(1), Uint16(2)])
+
+    def test_of_bitvector(self) -> None:
+        """Bitfields build from one bool argument per bit."""
+        expected = SmallBitvector(data=[Boolean(True), Boolean(False), Boolean(True)])
+        assert SmallBitvector.of(True, False, True) == expected
+
+    def test_of_bitlist_accepts_splatted_bits(self) -> None:
+        """An existing bit sequence splats into element arguments."""
+        bits = [True, False]
+        assert SmallBitlist.of(*bits) == SmallBitlist(data=[Boolean(True), Boolean(False)])
+
+    def test_of_byte_list_elements_are_ints(self) -> None:
+        """A byte list's elements are individual byte values."""
+        assert SmallByteList.of(0xDE, 0xAD) == SmallByteList(data=b"\xde\xad")
+
+    def test_of_returns_the_subclass_type(self) -> None:
+        """The factory binds to the concrete subclass, not the base."""
+        assert type(Uint16List4.of(1)) is Uint16List4
+
+    def test_constructors_stay_keyword_only(self) -> None:
+        """Positional constructor arguments stay rejected — `of` is the positional form."""
+        with pytest.raises(TypeError):
+            cast(Any, Uint16List4)([1, 2])
+        with pytest.raises(TypeError):
+            cast(Any, TwoFieldContainer)(Uint8(1), Uint16(2))
