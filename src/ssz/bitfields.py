@@ -19,6 +19,7 @@ from typing import (
     Any,
     ClassVar,
     Self,
+    cast,
     overload,
     override,
 )
@@ -36,10 +37,10 @@ from ssz.exceptions import (
     SSZTypeMismatch,
     SSZValueError,
 )
-from ssz.ssz_base import SSZModel
+from ssz.ssz_base import SSZCollection
 
 
-class BaseBitvector(SSZModel):
+class BaseBitvector(SSZCollection[Boolean]):
     """
     Fixed-length SSZ bitfield with exactly N bits.
 
@@ -59,17 +60,23 @@ class BaseBitvector(SSZModel):
     LENGTH: ClassVar[int]
     """Number of bits in the vector."""
 
-    data: Sequence[Boolean] = Field(default_factory=tuple)
+    data: Sequence[Boolean] = Field(default_factory=list)
     """
-    The immutable bit data stored as a sequence of booleans.
+    The bit data stored as a sequence of booleans.
 
     Accepts lists, tuples, or iterables of bool-like values on input.
-    Stored as an immutable tuple after validation.
+    Stored as a list after validation. Mutate through the bitfield API so
+    every bit is validated on entry.
     """
+
+    @override
+    def _validate_element(self, value: Any) -> Boolean:
+        """Wrap one incoming bit in Boolean, exactly as construction does."""
+        return Boolean(value)
 
     @field_validator("data", mode="before")
     @classmethod
-    def _coerce_and_validate(cls, bits_input: Any) -> tuple[Boolean, ...]:
+    def _coerce_and_validate(cls, bits_input: Any) -> list[Boolean]:
         """Enforce the exact bit count and coerce inputs into booleans."""
         # Subclasses must declare LENGTH before any instances can be validated.
         if not hasattr(cls, "LENGTH"):
@@ -84,7 +91,7 @@ class BaseBitvector(SSZModel):
             raise SSZLengthError(cls.__name__, cls.LENGTH, len(bits_input))
 
         # Wrap each value in Boolean — the constructor rejects anything outside 0 or 1.
-        return tuple(Boolean(bit) for bit in bits_input)
+        return [Boolean(bit) for bit in bits_input]
 
     @classmethod
     @override
@@ -191,7 +198,7 @@ class BaseBitvector(SSZModel):
         return cls(data=[Boolean((data[i // 8] >> (i % 8)) & 1) for i in range(cls.LENGTH)])
 
 
-class BaseBitlist(SSZModel):
+class BaseBitlist(SSZCollection[Boolean]):
     """
     Variable-length SSZ bitfield with 0 to N bits.
 
@@ -215,17 +222,34 @@ class BaseBitlist(SSZModel):
     LIMIT: ClassVar[int]
     """Maximum number of bits allowed."""
 
-    data: Sequence[Boolean] = Field(default_factory=tuple)
+    data: Sequence[Boolean] = Field(default_factory=list)
     """
-    The immutable bit data stored as a sequence of booleans.
+    The bit data stored as a sequence of booleans.
 
     Accepts lists, tuples, or iterables of bool-like values on input.
-    Stored as an immutable tuple after validation.
+    Stored as a list after validation. Mutate through the bitfield API so
+    every bit is validated on entry.
     """
+
+    @override
+    def _validate_element(self, value: Any) -> Boolean:
+        """Wrap one incoming bit in Boolean, exactly as construction does."""
+        return Boolean(value)
+
+    def append(self, value: Boolean) -> None:
+        """Add one bit at the end, validating it and the resulting length."""
+        element = self._validate_element(value)
+        self._validate_length(len(self.data) + 1)
+        cast("list[Boolean]", self.data).append(element)
+
+    def pop(self) -> Boolean:
+        """Remove and return the last bit, validating the resulting length."""
+        self._validate_length(len(self.data) - 1)
+        return cast("list[Boolean]", self.data).pop()
 
     @field_validator("data", mode="before")
     @classmethod
-    def _coerce_and_validate(cls, bits_input: Any) -> tuple[Boolean, ...]:
+    def _coerce_and_validate(cls, bits_input: Any) -> list[Boolean]:
         """Enforce the maximum bit count and coerce inputs into booleans."""
         # Subclasses must declare LIMIT before any instances can be validated.
         if not hasattr(cls, "LIMIT"):
@@ -248,7 +272,7 @@ class BaseBitlist(SSZModel):
             raise SSZLimitError(cls.__name__, cls.LIMIT, len(elements))
 
         # Wrap each value in Boolean — the constructor rejects anything outside 0 or 1.
-        return tuple(Boolean(bit) for bit in elements)
+        return [Boolean(bit) for bit in elements]
 
     @overload
     def __getitem__(self, key: int) -> Boolean: ...
