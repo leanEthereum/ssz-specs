@@ -10,13 +10,17 @@ from hypothesis import given, strategies as st
 from pydantic import BaseModel
 
 from ssz.byte_arrays import (
-    ZERO_HASH,
     BaseByteList,
     BaseBytes,
-    Bytes4,
     Bytes32,
 )
 from ssz.exceptions import SSZSerializationError, SSZTypeError, SSZValueError
+
+
+class Bytes4(BaseBytes):
+    """A 4-byte array, as applications typically define for short identifiers."""
+
+    LENGTH = 4
 
 
 class ByteList5(BaseByteList):
@@ -485,10 +489,9 @@ class TestBaseByteListPydantic:
         assert dumped["payload"]["data"] == "0x0001020304"
 
 
-def test_zero_hash_constant() -> None:
-    """The module-level ZERO_HASH is a 32-byte zero-filled Bytes32 instance."""
-    assert isinstance(ZERO_HASH, Bytes32)
-    assert bytes(ZERO_HASH) == b"\x00" * 32
+def test_zero_default_value() -> None:
+    """The zero factory produces a zero-filled byte array."""
+    assert bytes(Bytes32.zero()) == b"\x00" * 32
 
 
 def test_json_dumpable_via_hex() -> None:

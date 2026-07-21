@@ -3,17 +3,9 @@
 from ssz.bitfields import BaseBitlist, BaseBitvector
 from ssz.boolean import Boolean
 from ssz.byte_arrays import (
-    ZERO_HASH,
     BaseByteList,
     BaseBytes,
-    ByteList512KiB,
-    Bytes4,
-    Bytes16,
-    Bytes20,
     Bytes32,
-    Bytes33,
-    Bytes52,
-    Bytes64,
 )
 from ssz.collections import List, Vector
 from ssz.container import Container
@@ -30,24 +22,18 @@ from ssz.exceptions import (
     SSZTypeMismatch,
     SSZValueError,
 )
+from ssz.merkleization import ZERO_HASH
 from ssz.ssz_base import SSZType
 from ssz.uint import Uint8, Uint16, Uint32, Uint64, Uint128, Uint256
 
 __all__ = [
-    "ZERO_HASH",
     "BaseBitlist",
     "BaseBitvector",
     "BaseByteList",
     "BaseBytes",
-    "Boolean",
-    "ByteList512KiB",
-    "Bytes4",
-    "Bytes16",
-    "Bytes20",
     "Bytes32",
-    "Bytes33",
-    "Bytes52",
-    "Bytes64",
+    "ZERO_HASH",
+    "Boolean",
     "Container",
     "List",
     "SSZDefinitionError",

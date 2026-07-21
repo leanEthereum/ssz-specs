@@ -9,7 +9,6 @@ from hashlib import sha256
 from itertools import accumulate, batched, repeat
 from typing import Final
 
-from ssz import ZERO_HASH
 from ssz.bitfields import BaseBitlist, BaseBitvector
 from ssz.boolean import Boolean
 from ssz.byte_arrays import BaseByteList, BaseBytes, Bytes32
@@ -35,6 +34,9 @@ def _next_pow2(x: int) -> int:
         return 1
     return 1 << (x - 1).bit_length()
 
+
+ZERO_HASH: Final = Bytes32.zero()
+"""All-zero 32-byte hash, used as the merkleization padding value."""
 
 _ZERO_HASHES: Final[tuple[Bytes32, ...]] = tuple(
     accumulate(
