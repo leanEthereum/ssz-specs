@@ -21,7 +21,8 @@ class Container(SSZModel):
     typed against the declared field types, so type checkers flag raw values
     even though runtime validation coerces them. Hashing is by Merkle tree
     root, so containers work as dict keys and set members with value
-    semantics that match equality.
+    semantics that match equality. Mutability itself is configurable
+    through the inherited MUTABLE flag.
     """
 
     model_config = ConfigDict(frozen=False, validate_assignment=True)

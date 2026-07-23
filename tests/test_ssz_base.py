@@ -11,7 +11,7 @@ from ssz.boolean import Boolean
 from ssz.byte_arrays import BaseByteList
 from ssz.collections import List, Vector
 from ssz.container import Container
-from ssz.exceptions import SSZValueError
+from ssz.exceptions import SSZTypeError, SSZValueError
 from ssz.ssz_base import SSZCollection
 
 
@@ -221,6 +221,83 @@ class TestSSZCollectionMutation:
         values = Uint16List4(data=[])
         with pytest.raises(NotImplementedError):
             SSZCollection._validate_element(values, 1)
+
+
+class TestSSZMutabilityFlag:
+    """
+    Tests for configuring mutability per type.
+
+    MUTABLE defaults to on and is inherited. A type that sets it to False
+    rejects every mutation, while construction and reads keep working.
+    """
+
+    def test_immutable_list_rejects_mutation(self) -> None:
+        """An immutable list rejects element assignment, append, pop, and data assignment."""
+
+        class FrozenUint16List4(Uint16List4):
+            MUTABLE = False
+
+        values = FrozenUint16List4(data=[Uint16(1), Uint16(2)])
+        with pytest.raises(SSZTypeError):
+            values[0] = Uint16(9)
+        with pytest.raises(SSZTypeError):
+            values.append(Uint16(3))
+        with pytest.raises(SSZTypeError):
+            values.pop()
+        with pytest.raises(SSZTypeError):
+            values.data = [Uint16(9)]
+        assert values == FrozenUint16List4(data=[Uint16(1), Uint16(2)])
+
+    def test_immutable_byte_list_rejects_mutation(self) -> None:
+        """An immutable byte list rejects byte assignment, append, and pop."""
+
+        class FrozenByteList(SmallByteList):
+            MUTABLE = False
+
+        payload = FrozenByteList(data=b"\xde\xad")
+        with pytest.raises(SSZTypeError):
+            payload[0] = 0xBE
+        with pytest.raises(SSZTypeError):
+            payload.append(0xEF)
+        with pytest.raises(SSZTypeError):
+            payload.pop()
+        assert payload == FrozenByteList(data=b"\xde\xad")
+
+    def test_immutable_bitlist_rejects_mutation(self) -> None:
+        """An immutable bitlist rejects append and pop."""
+
+        class FrozenBitlist(SmallBitlist):
+            MUTABLE = False
+
+        bits = FrozenBitlist(data=[Boolean(True)])
+        with pytest.raises(SSZTypeError):
+            bits.append(Boolean(False))
+        with pytest.raises(SSZTypeError):
+            bits.pop()
+
+    def test_immutable_container_rejects_field_assignment(self) -> None:
+        """An immutable container rejects field assignment while reads keep working."""
+
+        class FrozenContainer(TwoFieldContainer):
+            MUTABLE = False
+
+        container = FrozenContainer(x=Uint8(1), y=Uint16(2))
+        with pytest.raises(SSZTypeError):
+            container.x = Uint8(3)
+        assert container.x == Uint8(1)
+
+    def test_mutability_flag_is_inherited(self) -> None:
+        """A subclass of an immutable type stays immutable."""
+
+        class FrozenBase(Uint16List4):
+            MUTABLE = False
+
+        class StillFrozen(FrozenBase):
+            pass
+
+        values = StillFrozen(data=[Uint16(1)])
+        with pytest.raises(SSZTypeError):
+            values.append(Uint16(2))
 
     def test_direct_data_assignment_revalidates(self) -> None:
         """Assigning the data field directly runs the same validation as construction."""

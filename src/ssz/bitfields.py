@@ -238,12 +238,14 @@ class BaseBitlist(SSZCollection[Boolean]):
 
     def append(self, value: Boolean) -> None:
         """Add one bit at the end, validating it and the resulting length."""
+        self._require_mutable()
         element = self._validate_element(value)
         self._validate_length(len(self.data) + 1)
         cast("list[Boolean]", self.data).append(element)
 
     def pop(self) -> Boolean:
         """Remove and return the last bit, validating the resulting length."""
+        self._require_mutable()
         self._validate_length(len(self.data) - 1)
         return cast("list[Boolean]", self.data).pop()
 
