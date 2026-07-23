@@ -4,7 +4,7 @@ from typing import Any, cast
 
 import pytest
 
-from ssz import Uint8, Uint16, Uint64
+from ssz import Bytes32, SSZLimitError, SSZTypeMismatch, Uint8, Uint16, Uint32, Uint64
 from ssz.bitfields import BaseBitlist, BaseBitvector
 from ssz.boolean import Boolean
 from ssz.byte_arrays import BaseByteList
@@ -22,6 +22,22 @@ class Uint16Vector2(Vector[Uint16]):
     """A vector of exactly 2 Uint16 values."""
 
     LENGTH = 2
+
+
+class TypedUint16(Uint16):
+    """A Uint16 subtype, as applications define semantic integer types."""
+
+
+class TypedUint16List4(List[TypedUint16]):
+    """A list with up to 4 TypedUint16 values."""
+
+    LIMIT = 4
+
+
+class Bytes32List4(List[Bytes32]):
+    """A list with up to 4 Bytes32 values."""
+
+    LIMIT = 4
 
 
 class SmallBitvector(BaseBitvector):
@@ -167,6 +183,52 @@ class TestSSZCollectionOf:
     def test_of_byte_list_elements_are_ints(self) -> None:
         """A byte list's elements are individual byte values."""
         assert SmallByteList.of(0xDE, 0xAD) == SmallByteList(data=b"\xde\xad")
+
+    def test_of_rejects_bool_for_uint_elements(self) -> None:
+        """A bool is not an integer element, even though bool subclasses int."""
+        with pytest.raises(SSZTypeMismatch):
+            Uint16List4.of(True)
+
+    def test_of_rejects_other_uint_widths(self) -> None:
+        """A uint of another width is a type error, regardless of its value."""
+        with pytest.raises(SSZTypeMismatch):
+            Uint16List4.of(Uint32(7))
+
+    def test_of_accepts_a_parent_uint_class(self) -> None:
+        """A value of the element type's parent class converts into the element type."""
+        values = TypedUint16List4.of(Uint16(7))
+        assert values == TypedUint16List4(data=[TypedUint16(7)])
+        assert type(values.data[0]) is TypedUint16
+
+    def test_of_rejects_a_child_uint_class(self) -> None:
+        """A value of a child class of the element type is a type error."""
+        with pytest.raises(SSZTypeMismatch):
+            Uint16List4.of(TypedUint16(7))
+
+    def test_of_beyond_limit_rejected(self) -> None:
+        """More element arguments than the limit fail validation."""
+        with pytest.raises(SSZLimitError):
+            Uint16List4.of(1, 2, 3, 4, 5)
+
+    def test_of_converts_plain_bytes_elements(self) -> None:
+        """Plain bytes, such as bytes.fromhex output, convert into byte-array elements."""
+        payload = bytes.fromhex("ab" * 32)
+        values = Bytes32List4.of(payload)
+        assert values == Bytes32List4(data=[Bytes32(payload)])
+        assert type(values.data[0]) is Bytes32
+
+    def test_of_rejects_hex_string_elements(self) -> None:
+        """A hex string is not bytes; convert it with bytes.fromhex first."""
+        with pytest.raises(SSZTypeMismatch) as exception_info:
+            Bytes32List4.of("ab" * 32)
+        assert str(exception_info.value) == "Expected Bytes32, got str"
+
+    def test_of_wrong_length_bytes_keeps_coercion_detail(self) -> None:
+        """An ancestor-class element that fails construction chains the inner detail."""
+        with pytest.raises(SSZTypeMismatch) as exception_info:
+            Bytes32List4.of(b"\xab\xcd")
+        expected = "Expected Bytes32, got bytes: Bytes32 requires exactly 32 bytes, got 2"
+        assert str(exception_info.value) == expected
 
     def test_of_returns_the_subclass_type(self) -> None:
         """The factory binds to the concrete subclass, not the base."""
