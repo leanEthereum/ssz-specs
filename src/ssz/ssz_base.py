@@ -2,10 +2,18 @@
 
 import io
 from abc import ABC, abstractmethod
-from typing import IO, Final, Self
+from collections.abc import Sequence
+from typing import IO, TYPE_CHECKING, Any, ClassVar, Final, Self, cast
+
+from pydantic import ConfigDict
 
 from ssz.base import StrictBaseModel
-from ssz.exceptions import SSZSerializationError
+from ssz.exceptions import (
+    SSZLengthError,
+    SSZLimitError,
+    SSZSerializationError,
+    SSZTypeError,
+)
 
 BYTES_PER_LENGTH_OFFSET: Final = 4
 """Width of an SSZ offset prefixing each variable-size element.
@@ -119,7 +127,29 @@ class SSZModel(StrictBaseModel, SSZType):
     - Containers expose multiple named Pydantic fields that map to a struct on the wire.
 
     The default length and string forms switch on which shape the subclass uses.
+
+    Mutability is configurable per type through the MUTABLE flag. It defaults
+    to on and is inherited, so an application can declare one base with
+    MUTABLE set to False and every type built on it is immutable.
     """
+
+    MUTABLE: ClassVar[bool] = True
+    """Whether instances accept mutation. Set False on a subclass to freeze it."""
+
+    def _require_mutable(self) -> None:
+        """Reject the mutation when the type declares itself immutable."""
+        if not type(self).MUTABLE:
+            raise SSZTypeError(f"{type(self).__name__} is immutable")
+
+    # Hidden from type checkers: a visible __setattr__ typed to accept Any
+    # would exempt every field assignment from static checking against the
+    # declared field types.
+    if not TYPE_CHECKING:
+
+        def __setattr__(self, name: str, value: Any) -> None:
+            """Gate field assignment on the MUTABLE flag, then validate as usual."""
+            self._require_mutable()
+            super().__setattr__(name, value)
 
     def __len__(self) -> int:
         """Element count for collections, field count for containers."""
@@ -136,3 +166,67 @@ class SSZModel(StrictBaseModel, SSZType):
             return f"{cls_name}(data={list(data_field)!r})"
         field_strs = [f"{name}={getattr(self, name)!r}" for name in type(self).model_fields]
         return f"{cls_name}({' '.join(field_strs)})"
+
+
+class SSZCollection[T](SSZModel):
+    """
+    Pydantic-backed SSZ base for collections that wrap their contents in one data field.
+
+    Sequences, bitfields, and byte lists all share this base.
+    Containers do not — their contents live in named fields, not a single data field.
+
+    Unlike containers, collections are mutable. Mutation validates the
+    incoming elements and the resulting length by the same rules construction
+    applies. Elements already inside the collection were validated when they
+    entered, so they are left alone and mutation cost is proportional to the
+    change, not the collection size. Element assignment lives on this shared
+    base; only variable-size collections offer append and pop. Fixed-length
+    shapes accept element assignment but reject any length change. Mutability
+    itself is configurable through the inherited MUTABLE flag.
+
+    The type parameter is the declared element type: sequences bind their own
+    element type, bitfields bind Boolean, and byte lists bind int. Mutation is
+    typed against it, so type checkers flag raw values at mutation sites even
+    though runtime validation coerces them exactly as construction does.
+    """
+
+    model_config = ConfigDict(frozen=False, validate_assignment=True)
+
+    if TYPE_CHECKING:
+        # Each concrete subclass declares the real data field with its own type.
+        # This annotation only teaches type checkers the attribute exists here,
+        # where the shared mutation methods assign it.
+        data: Any
+
+    def __setitem__(self, index: int | slice, value: T | Sequence[T]) -> None:
+        """Replace the element(s) at ``index``, validating each new element."""
+        self._require_mutable()
+        if isinstance(index, slice):
+            elements = [self._validate_element(v) for v in cast("Sequence[T]", value)]
+            # Dry run on a copy: the resulting length must pass the declared
+            # bound before the stored payload changes.
+            candidate = list(self.data)
+            candidate[index] = elements
+            self._validate_length(len(candidate))
+            self.data[index] = elements
+        else:
+            self.data[index] = self._validate_element(value)
+
+    def _validate_element(self, value: Any) -> Any:
+        """
+        Validate one incoming element by the family's construction rule.
+
+        Each concrete family implements this with the same rule its data
+        validator applies to every element at construction.
+        """
+        raise NotImplementedError
+
+    def _validate_length(self, length: int) -> None:
+        """Check a prospective element count against the declared size bound."""
+        cls = type(self)
+        declared_length = getattr(cls, "LENGTH", None)
+        if declared_length is not None and length != declared_length:
+            raise SSZLengthError(cls.__name__, declared_length, length)
+        declared_limit = getattr(cls, "LIMIT", None)
+        if declared_limit is not None and length > declared_limit:
+            raise SSZLimitError(cls.__name__, declared_limit, length)
