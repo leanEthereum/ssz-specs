@@ -50,7 +50,7 @@ class Root(Chunk):
 ZERO_ROOT: Final = Root.zero()
 """All-zero 32-byte root, used as the merkleization padding value."""
 
-_ZERO_HASHES: Final[tuple[Root, ...]] = tuple(
+_ZERO_ROOTS: Final[tuple[Root, ...]] = tuple(
     accumulate(
         repeat(None, 64),
         lambda previous, _: Root(sha256(previous + previous).digest()),
@@ -86,7 +86,7 @@ def _zero_tree_root(width: int) -> Root:
     depth = (width - 1).bit_length()
     # The cache stores the all-zero subtree root at every depth.
     # Index by depth to skip materializing 2**d zero leaves and the layers above them.
-    return _ZERO_HASHES[depth]
+    return _ZERO_ROOTS[depth]
 
 
 def merkleize(chunks: Sequence[Chunk], limit: int | None = None) -> Root:
