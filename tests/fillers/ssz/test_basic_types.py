@@ -8,7 +8,6 @@ from ssz import (
     BaseByteList,
     BaseBytes,
     Boolean,
-    Bytes32,
     List,
     Uint8,
     Uint16,
@@ -23,6 +22,10 @@ from ssz_testing import SSZTestFiller
 
 class Bytes4(BaseBytes):
     LENGTH = 4
+
+
+class Bytes32(BaseBytes):
+    LENGTH = 32
 
 
 class Bytes52(BaseBytes):

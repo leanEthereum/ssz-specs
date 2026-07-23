@@ -240,12 +240,6 @@ class BaseBytes(bytes, SSZType):
         return hash((type(self), bytes(self)))
 
 
-class Bytes32(BaseBytes):
-    """Fixed-size byte array of exactly 32 bytes."""
-
-    LENGTH = 32
-
-
 class BaseByteList(SSZModel):
     r"""
     Variable-length SSZ byte array with 0 to N bytes.

@@ -12,7 +12,6 @@ from pydantic import BaseModel
 from ssz.byte_arrays import (
     BaseByteList,
     BaseBytes,
-    Bytes32,
 )
 from ssz.exceptions import SSZSerializationError, SSZTypeError, SSZValueError
 
@@ -21,6 +20,12 @@ class Bytes4(BaseBytes):
     """A 4-byte array, as applications typically define for short identifiers."""
 
     LENGTH = 4
+
+
+class Bytes32(BaseBytes):
+    """A 32-byte array, as applications typically define for roots and hashes."""
+
+    LENGTH = 32
 
 
 class ByteList5(BaseByteList):
